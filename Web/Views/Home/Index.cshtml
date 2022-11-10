@@ -1,0 +1,40 @@
+﻿@using System.Globalization;
+@model IEnumerable<OrderDto>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Заказы</h1>
+    <div>
+        <form method="post" asp-action="SeedOrders">
+            <button class="btn btn-primary">Заполнить тестовыми данными</button>
+        </form>
+        <form method="post" asp-action="DeleteSeededOrders">
+            <button class="btn btn-danger">Удалить тестовые данные</button>
+        </form>
+    </div>
+    @if (!Model.Any())
+    {
+        <h2>Заказов ещё нет...</h2>
+    }
+    <div>
+        <table class="table">
+            <tr>
+                <th>ID</th>
+                <th>Number</th>
+                <th>Provider name</th>
+                <th>Date</th>
+            </tr>
+            @foreach(var order in Model)
+            {
+                <tr>
+                    <td>@order.Id</td>
+                    <td>@order.Number</td>
+                    <td>@order.ProviderName</td>
+                    <td>@order.Date.ToString("D", CultureInfo.GetCultureInfo("ru-RU"))</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
