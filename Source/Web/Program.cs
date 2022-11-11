@@ -10,8 +10,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMvc()
                 .AddApplicationPart(typeof(Presentation.AssemblyReference).Assembly);
 
+string connectionString = "";
+if (builder.Environment.EnvironmentName == "Docker")
+     connectionString = "DockerDatabase";
+   
+else
+    connectionString = "OrdinaryDatabase";
+
 builder.Services.AddDbContext<ApplicationContext>(options =>
-               options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
+              options.UseSqlServer(builder.Configuration.GetConnectionString(connectionString)));
 
 builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 

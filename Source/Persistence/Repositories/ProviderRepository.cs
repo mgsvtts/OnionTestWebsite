@@ -21,7 +21,7 @@ namespace Persistence.Repositories
 
         public async Task<bool> NumberIsUniqueAsync(string number, int providerId, CancellationToken token = default)
         {
-            var provider = await _context.Provider.SingleOrDefaultAsync(x=>x.Id==providerId, token);
+            var provider = await _context.Provider.SingleOrDefaultAsync(x => x.Id == providerId, token);
             var order = await _context.Order.FirstOrDefaultAsync(x => x.Number == number, token);
 
             return provider == null || order == null;

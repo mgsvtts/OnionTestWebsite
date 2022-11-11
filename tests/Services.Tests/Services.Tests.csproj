@@ -23,7 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Services\Services.csproj" />
+    <ProjectReference Include="..\..\Source\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\..\Source\Domain\Domain.csproj" />
+    <ProjectReference Include="..\..\Source\Services\Services.csproj" />
   </ItemGroup>
 
 </Project>
