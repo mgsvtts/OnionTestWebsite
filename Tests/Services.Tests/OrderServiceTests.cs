@@ -1,4 +1,4 @@
-﻿using Contracts;
+﻿using Contracts.Order;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Repositories;

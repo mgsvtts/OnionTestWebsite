@@ -1,4 +1,4 @@
-﻿namespace Contracts
+﻿namespace Contracts.Order
 {
     public class OrderDto
     {
@@ -8,6 +8,6 @@
 
         public DateTime Date { get; set; }
 
-        public string ProviderName { get; set; }
+        public ProviderDto Provider { get; set; }
     }
 }

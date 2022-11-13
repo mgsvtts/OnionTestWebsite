@@ -1,11 +1,6 @@
-﻿using Contracts;
+﻿using Contracts.Order;
 using Microsoft.AspNetCore.Mvc;
 using Services.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
@@ -37,9 +32,9 @@ namespace Presentation.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult>Edit(OrderForUpdateDto orderDto, CancellationToken token)
+        public async Task<IActionResult> Edit(OrderForUpdateDto orderDto, CancellationToken token)
         {
-            await _serviceManager.OrderService.UpdateAsync(orderDto,token);
+            await _serviceManager.OrderService.UpdateAsync(orderDto, token);
 
             return RedirectToAction(nameof(Show), new { id = orderDto.Id });
         }
@@ -72,6 +67,5 @@ namespace Presentation.Controllers
 
             return RedirectToAction(nameof(Index), "Home");
         }
-
     }
 }

@@ -1,4 +1,5 @@
 ﻿@using System.Globalization;
+@using Contracts.Order;
 @model OrderDto
 @{
     ViewData["Title"] = "Order Page";
@@ -9,6 +10,6 @@
     </div>
     <p><b>ID: </b>@Model.Id</p>
     <p><b>Number: </b>@Model.Number</p>
-    <p><b>Provider name: </b>@Model.ProviderName</p>
+    <p><b>Provider name: </b>@Model.Provider.Name</p>
     <p><b>Created date: </b>@Model.Date.ToString("D", CultureInfo.GetCultureInfo("ru-RU"))</p>
 </div>

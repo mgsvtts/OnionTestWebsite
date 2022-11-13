@@ -1,4 +1,5 @@
-﻿using Contracts;
+﻿using Contracts.Order;
+using Contracts.Sieve.Order;
 
 namespace Services.Abstractions
 {
@@ -17,5 +18,7 @@ namespace Services.Abstractions
         public Task SeedAsync(CancellationToken token = default);
 
         public Task DeleteSeededAsync(CancellationToken token = default);
+
+        public Task<IQueryable<OrderDto>> SieveAsync(OrderFilterOptionsDto filterOptions, OrderSortStateDto sortOrder, CancellationToken token = default);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using Contracts.Sieve.Order;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.ViewModels;
 using Services.Abstractions;
@@ -15,9 +16,25 @@ namespace Presentation.Controllers
             _serviceManager = serviceManager;
         }
 
-        public async Task<IActionResult> Index(CancellationToken token)
+        public async Task<IActionResult> Index(int[] providerIds,
+                                               DateTime? fromDate,
+                                               DateTime? toDate,
+                                               CancellationToken token,
+                                               string? number = null,
+                                               OrderSortStateDto sortOrder = OrderSortStateDto.IdAsc)
         {
-            return View(await _serviceManager.OrderService.GetAllAsync(token));
+            var providersDto = await _serviceManager.ProviderService.GetAllAsync(token);
+
+            var filterOptions = new OrderFilterOptionsDto(providersDto.ToList(), providerIds, fromDate, toDate, number);
+
+            var ordersDto = await _serviceManager.OrderService.SieveAsync(filterOptions, sortOrder, token);
+
+            return View(new IndexViewModel
+            {
+                Orders = ordersDto,
+                FilterOptions = filterOptions,
+                SortingOptions = new OrderSortingOptionsDto(sortOrder)
+            }); ;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

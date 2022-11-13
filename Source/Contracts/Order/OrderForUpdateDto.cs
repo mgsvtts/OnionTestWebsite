@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Contracts
+namespace Contracts.Order
 {
     public class OrderForUpdateDto
     {

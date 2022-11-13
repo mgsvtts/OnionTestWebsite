@@ -1,39 +1,78 @@
 ﻿@using System.Globalization;
-@model IEnumerable<OrderDto>
+@model IndexViewModel
 @{
     ViewData["Title"] = "Home Page";
 }
-
+<html lang="ru">
 <div class="text-center">
-    <h1 class="display-4">Заказы</h1>
     <div>
         <form method="post" asp-controller="Order" asp-action="Seed">
-            <button class="btn btn-primary">Заполнить тестовыми данными</button>
+            <button class="btn btn-primary">Добавить тестовые данные</button>
         </form>
         <form method="post" asp-controller="Order" asp-action="DeleteSeeded">
             <button class="btn btn-danger">Удалить тестовые данные</button>
         </form><br />
+        <a class="btn btn-primary" asp-controller="Order" asp-action="Create">Добавить новый заказ</a>
     </div>
-    @if (!Model.Any())
+    <form method="get">
+        <div class="form-inline">
+            <input type="hidden" name="sortOrder" value="@Model.SortingOptions.Current"/>
+            <input name="number" placeholder="Введите номер" value="@Model.FilterOptions.Number" class="form-control" />
+            <div>
+                <label>Минимальная дата</label>
+                <input name="fromDate" type="datetime" placeholder="@Model.FilterOptions.FromDate.ToShortDateString()"  class="form-control" />
+                <label>Максимальная дата</label>
+                <input name="toDate" type="datetime" placeholder="@Model.FilterOptions.ToDate.ToShortDateString()" class="form-control" />
+            </div>
+            <select multiple name="providerIds" asp-items="(Model.FilterOptions.Providers).Select(x => new SelectListItem()
+                    { Text = x.Text, Value = x.Value.ToString(), Selected = ViewBag.SelectedProviders.Contains(Int32.Parse(x.Value)) ? true : false })" onchange="this.form.submit()" class="form-control">
+            </select>
+            <button class="btn btn-primary">Применить фильтр</button>
+        </div>
+    </form>
+    <h1 class="display-4">Заказы</h1>
+    @if (!Model.Orders.Any())
     {
-        <h2>Заказов ещё нет...</h2>
+        <h2>Заказов нет...</h2>
     }
     else
     {
         <div>
             <table class="table">
                 <tr>
-                    <th>ID</th>
-                    <th>Number</th>
-                    <th>Provider name</th>
-                    <th>Date</th>
+                    <th>
+                        <a asp-action="Index"
+                           asp-route-providerIds="@Model.FilterOptions.ProviderIds"
+                           asp-route-fromDate="@Model.FilterOptions.FromDate"
+                           asp-route-toDate="@Model.FilterOptions.ToDate"
+                           asp-route-number="@Model.FilterOptions.Number"
+                           asp-route-sortOrder="@Model.SortingOptions.IdSort">ID</a>
+                    </th>
+                    <th><a asp-action="Index"
+                           asp-route-providerIds="@Model.FilterOptions.ProviderIds"
+                           asp-route-fromDate="@Model.FilterOptions.FromDate"
+                           asp-route-toDate="@Model.FilterOptions.ToDate"
+                           asp-route-number="@Model.FilterOptions.Number"
+                           asp-route-sortOrder="@Model.SortingOptions.NumberSort">Number</a></th>
+                    <th><a asp-action="Index"
+                           asp-route-providerIds="@Model.FilterOptions.ProviderIds"
+                           asp-route-fromDate="@Model.FilterOptions.FromDate"
+                           asp-route-toDate="@Model.FilterOptions.ToDate"
+                           asp-route-number="@Model.FilterOptions.Number"
+                           asp-route-sortOrder="@Model.SortingOptions.ProviderNameSort">Provider Name</a></th>
+                    <th><a asp-action="Index"
+                           asp-route-providerIds="@Model.FilterOptions.ProviderIds"
+                           asp-route-fromDate="@Model.FilterOptions.FromDate"
+                           asp-route-toDate="@Model.FilterOptions.ToDate"
+                           asp-route-number="@Model.FilterOptions.Number"
+                           asp-route-sortOrder="@Model.SortingOptions.DateSort">Date</a></th>
                 </tr>
-                @foreach(var order in Model)
+                @foreach(var order in Model.Orders)
                 {
                     <tr>
                         <td>@order.Id</td>
                         <td><a asp-controller="Order" asp-action="Show" asp-route-id="@order.Id">@order.Number</a></td>
-                        <td>@order.ProviderName</td>
+                        <td>@order.Provider.Name</td>
                         <td>@order.Date.ToString("D", CultureInfo.GetCultureInfo("ru-RU"))</td>
                     </tr>
                 }
@@ -41,3 +80,4 @@
         </div>
     }
 </div>
+</html>

@@ -1,4 +1,5 @@
-﻿using Contracts;
+﻿using Contracts.Order;
+using Contracts.Sieve.Order;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Repositories;
@@ -40,6 +41,7 @@ namespace Services
             }
 
             var order = orderForCreationDto.Adapt<Order>();
+            order.Date = DateTime.Now;
 
             _repositoryManager.OrderRepository.Add(order);
 
@@ -81,6 +83,20 @@ namespace Services
             return orders.Adapt<IEnumerable<OrderDto>>();
         }
 
+        public async Task<IQueryable<OrderDto>> SieveAsync(OrderFilterOptionsDto filterOptions, OrderSortStateDto sortOrder, CancellationToken token = default)
+        {
+            var orders = await _repositoryManager.OrderRepository.GetAllAsync(token);
+            var ordersDto = orders.Adapt<IEnumerable<OrderDto>>().AsQueryable();
+
+            var filter = new OrderFilter(filterOptions);
+            var sorter = new OrderSorter(sortOrder);
+
+            ordersDto = filter.Execute(ordersDto);
+            ordersDto = sorter.Execute(ordersDto);
+
+            return ordersDto;
+        }
+
         public async Task SeedAsync(CancellationToken token = default)
         {
             await _repositoryManager.OrderRepository.AddRangeAsync(GetSeedData(), token);
@@ -99,23 +115,34 @@ namespace Services
             await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
         }
 
-        private static IEnumerable<Order> GetSeedData()
+        private IEnumerable<Order> GetSeedData()
         {
             int ordersToAdd = 500;
-            var provider1 = new Provider { Name = TestProviderPrefix + " 1" };
-            var provider2 = new Provider { Name = TestProviderPrefix + " 2" };
 
             var random = new Random(0);
 
             var orders = new List<Order>();
+            var providers = new List<Provider>();
 
-            for (int i = 0; i <= ordersToAdd; i++)
+            for (int i = 0; i < ordersToAdd; i++)
             {
-                var randomNum = random.Next(2);
+                var randomProviderId = random.Next(10);
+
+                var provider = providers.FirstOrDefault(x => x.Name.Contains($"{TestProviderPrefix} {randomProviderId}"))
+                               ?? _repositoryManager.ProviderRepository.GetAllByNameAsync($"{TestProviderPrefix} {randomProviderId}")
+                                  .Result
+                                  .FirstOrDefault();
+
+                if (provider == null)
+                {
+                    provider = new Provider { Name = $"{TestProviderPrefix} {randomProviderId}" };
+                    providers.Add(provider);
+                }
+
                 orders.Add(new Order
                 {
-                    Number = TestOrderPrefix + " " + i,
-                    Provider = randomNum == 1 ? provider1 : provider2,
+                    Number = $"{TestOrderPrefix} {i}",
+                    Provider = provider,
                     Date = DateTime.Today - TimeSpan.FromDays(i)
                 });
             }

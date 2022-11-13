@@ -1,17 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Contracts
+namespace Contracts.Order
 {
     public class OrderForCreationDto
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "Order number is required")]
-
         public string Number { get; set; }
 
+        [Required]
         public int ProviderId { get; set; }
-
-        public DateTime DateCreated { get; set; }
     }
 }

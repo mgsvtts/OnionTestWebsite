@@ -16,6 +16,9 @@ namespace Persistence.Repositories
         public async Task<IEnumerable<Provider>> GetAllByNameAsync(string name, CancellationToken token = default)
             => await _context.Provider.Where(x => x.Name.ToLower().Contains(name.ToLower())).ToListAsync(token);
 
+        public async Task<IEnumerable<Provider>> GetAllAsync(CancellationToken token = default)
+            => await _context.Provider.ToListAsync(token);
+
         public void RemoveRange(IEnumerable<Provider> providers)
             => _context.Provider.RemoveRange(providers);
 

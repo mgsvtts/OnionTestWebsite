@@ -12,8 +12,7 @@ builder.Services.AddMvc()
 
 string connectionString = "";
 if (builder.Environment.EnvironmentName == "Docker")
-     connectionString = "DockerDatabase";
-   
+    connectionString = "DockerDatabase";
 else
     connectionString = "OrdinaryDatabase";
 
