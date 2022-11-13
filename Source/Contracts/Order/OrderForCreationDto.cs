@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace Contracts.Order
 {
@@ -9,5 +10,9 @@ namespace Contracts.Order
 
         [Required]
         public int ProviderId { get; set; }
+
+        public SelectList Providers { get; set; }
+
+        public List<string> OrderItemNames{ get; set; }  
     }
 }

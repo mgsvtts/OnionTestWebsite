@@ -13,19 +13,16 @@ namespace Services
             SortOrder = sortOrder;
         }
 
-        public IQueryable<OrderDto> Execute(IQueryable<OrderDto> toSort)
+        public IQueryable<OrderDto> Execute(IQueryable<OrderDto> toSort) => toSort = SortOrder switch
         {
-            return toSort = SortOrder switch
-            {
-                OrderSortStateDto.IdDesc => toSort.OrderByDescending(s => s.Id),
-                OrderSortStateDto.NumberAsc => toSort.OrderBy(s => s.Number),
-                OrderSortStateDto.NumberDesc => toSort.OrderByDescending(s => s.Number),
-                OrderSortStateDto.DateAsc => toSort.OrderBy(s => s.Date),
-                OrderSortStateDto.DateDesc => toSort.OrderByDescending(s => s.Date),
-                OrderSortStateDto.ProviderNameAsc => toSort.OrderBy(s => s.Provider.Name),
-                OrderSortStateDto.ProviderNameDesc => toSort.OrderByDescending(s => s.Provider.Name),
-                _ => toSort.OrderBy(s => s.Id),
-            };
-        }
+            OrderSortStateDto.IdDesc => toSort.OrderByDescending(x => x.Id),
+            OrderSortStateDto.NumberAsc => toSort.OrderBy(x => x.Number).ThenBy(x => x.Id),
+            OrderSortStateDto.NumberDesc => toSort.OrderByDescending(x => x.Number).ThenByDescending(x => x.Id),
+            OrderSortStateDto.DateAsc => toSort.OrderBy(x => x.Date).ThenBy(x => x.Number),
+            OrderSortStateDto.DateDesc => toSort.OrderByDescending(x => x.Date).ThenByDescending(x => x.Number),
+            OrderSortStateDto.ProviderNameAsc => toSort.OrderBy(x => x.Provider.Name).ThenBy(x => x.Number),
+            OrderSortStateDto.ProviderNameDesc => toSort.OrderByDescending(x => x.Provider.Name).ThenByDescending(x => x.Number),
+            _ => toSort.OrderBy(x => x.Id),
+        };
     }
 }

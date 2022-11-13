@@ -1,5 +1,6 @@
 ﻿using Contracts.Order;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Services.Abstractions;
 
 namespace Presentation.Controllers
@@ -13,26 +14,41 @@ namespace Presentation.Controllers
             _serviceManager = serviceManager;
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(new OrderForCreationDto());
+            var providers = await _serviceManager.ProviderService.GetAllAsync();
+            providers = providers.OrderBy(x => x.Name).Distinct();
+
+            return View(new OrderForCreationDto
+            {
+                Providers = new SelectList(providers, "Id", "Name")
+            });
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(OrderForCreationDto orderDto, CancellationToken token)
         {
-            await _serviceManager.OrderService.CreateAsync(orderDto, token);
+            try
+            {
+                await _serviceManager.OrderService.CreateAsync(orderDto, token);
+            }
+            catch(Exception ex)
+            {
+                ModelState.AddModelError(nameof(orderDto.Number), ex.Message);
 
+                var providers = await _serviceManager.ProviderService.GetAllAsync(token);
+                orderDto.Providers = new SelectList(providers, "Id", "Name");
+
+                return View(orderDto);
+            }
+           
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
-        public IActionResult Edit()
-        {
-            return View(new OrderForCreationDto());
-        }
+        public IActionResult Update() => View(new OrderForUpdateDto());
 
         [HttpPost]
-        public async Task<IActionResult> Edit(OrderForUpdateDto orderDto, CancellationToken token)
+        public async Task<IActionResult> Update(OrderForUpdateDto orderDto, CancellationToken token)
         {
             await _serviceManager.OrderService.UpdateAsync(orderDto, token);
 
@@ -47,10 +63,8 @@ namespace Presentation.Controllers
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
-        public async Task<IActionResult> Show(int id, CancellationToken token)
-        {
-            return View(await _serviceManager.OrderService.GetByIdAsync(id, token));
-        }
+        public async Task<IActionResult> Show(int id, CancellationToken token) 
+            => View(await _serviceManager.OrderService.GetByIdAsync(id, token));
 
         [HttpPost]
         public async Task<IActionResult> Seed(CancellationToken token)

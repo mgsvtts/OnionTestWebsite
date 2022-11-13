@@ -6,23 +6,23 @@ namespace Contracts.Sieve.Order
     {
         public string? Number { get; }
 
-        public int[] ProviderIds { get; }
+        public IList<int> CurrentProviderIds { get; }
+
+        public MultiSelectList Providers { get; }
 
         public DateTime FromDate { get; }
 
         public DateTime ToDate { get; }
 
-        public SelectList Providers { get; }
-
-        public OrderFilterOptionsDto(IList<ProviderDto> providers, int[] providerIds, DateTime? fromDate, DateTime? toDate, string? number = null)
+        public OrderFilterOptionsDto(IList<ProviderDto> providers, IList<int> providerIds, DateTime? fromDate, DateTime? toDate, string? number = null)
         {
             Number = number;
-            ProviderIds = providerIds;
+            CurrentProviderIds = providerIds;
             providers = providers.OrderBy(x => x.Name)
                                  .Distinct()
                                  .ToList();
             providers.Insert(0, new ProviderDto { Id = 0, Name = "Все" });
-            Providers = new SelectList(providers, "Id", "Name", providerIds);
+            Providers = new MultiSelectList(providers, "Id", "Name", providerIds);
             FromDate = fromDate != null ? fromDate.Value : DateTime.Today.AddMonths(-1);
             ToDate = toDate != null ? toDate.Value : DateTime.Today;
         }

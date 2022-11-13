@@ -13,6 +13,8 @@ namespace Persistence.Configurations
             builder.HasKey(provider => provider.Id);
 
             builder.Property(provider => provider.Id).ValueGeneratedOnAdd();
+
+            builder.HasIndex(provider => provider.Name);
         }
     }
 }

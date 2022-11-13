@@ -20,15 +20,15 @@ namespace Services
                 toFilter = toFilter.Where(x => x.Number.Contains(FilterOptions.Number));
             }
 
-            if (FilterOptions.ProviderIds.Any() && !FilterOptions.ProviderIds.Contains(0))
+            if (FilterOptions.CurrentProviderIds.Any() && !FilterOptions.CurrentProviderIds.Contains(0))
             {
                 toFilter = from item in toFilter
-                           from id in FilterOptions.ProviderIds
+                           from id in FilterOptions.CurrentProviderIds
                            where item.Provider.Id == id
                            select item;
             }
 
-            toFilter = toFilter.Where(x => x.Date > FilterOptions.FromDate && x.Date < FilterOptions.ToDate);
+            toFilter = toFilter.Where(x => x.Date.Date >= FilterOptions.FromDate && x.Date.Date <= FilterOptions.ToDate);
 
             return toFilter;
         }

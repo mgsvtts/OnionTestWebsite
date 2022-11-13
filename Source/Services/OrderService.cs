@@ -33,15 +33,22 @@ namespace Services
 
         public async Task CreateAsync(OrderForCreationDto orderForCreationDto, CancellationToken token = default)
         {
-            var result = await _repositoryManager.ProviderRepository.NumberIsUniqueAsync(orderForCreationDto.Number, orderForCreationDto.ProviderId, token);
+            var isUnique = await NumberIsUniqueAsync(orderForCreationDto.Number, orderForCreationDto.ProviderId, token);
 
-            if (!result)
+            if (!isUnique)
             {
                 throw new NumberAndProviderIdIsNotUniqueException(orderForCreationDto.Number);
             }
 
             var order = orderForCreationDto.Adapt<Order>();
+            order.Provider = await _repositoryManager.ProviderRepository.GetByIdAsync(orderForCreationDto.ProviderId, token);
             order.Date = DateTime.Now;
+            
+            foreach(var name in orderForCreationDto.OrderItemNames)
+            {
+                var item = _repositoryManager.OrderItemRepository.GetAllByNameAsync(name);
+            }
+           
 
             _repositoryManager.OrderRepository.Add(order);
 
@@ -99,7 +106,7 @@ namespace Services
 
         public async Task SeedAsync(CancellationToken token = default)
         {
-            await _repositoryManager.OrderRepository.AddRangeAsync(GetSeedData(), token);
+            await _repositoryManager.OrderRepository.AddRangeAsync(await GetSeedDataAsync(), token);
 
             await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
         }
@@ -115,7 +122,7 @@ namespace Services
             await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
         }
 
-        private IEnumerable<Order> GetSeedData()
+        private async Task<IEnumerable<Order>> GetSeedDataAsync(CancellationToken token = default)
         {
             int ordersToAdd = 500;
 
@@ -129,9 +136,7 @@ namespace Services
                 var randomProviderId = random.Next(10);
 
                 var provider = providers.FirstOrDefault(x => x.Name.Contains($"{TestProviderPrefix} {randomProviderId}"))
-                               ?? _repositoryManager.ProviderRepository.GetAllByNameAsync($"{TestProviderPrefix} {randomProviderId}")
-                                  .Result
-                                  .FirstOrDefault();
+                               ?? await _repositoryManager.ProviderRepository.GetByNameAsync($"{TestProviderPrefix} {randomProviderId}", token);
 
                 if (provider == null)
                 {
@@ -148,6 +153,21 @@ namespace Services
             }
 
             return orders;
+        }
+
+        private async Task<bool> NumberIsUniqueAsync(string number, int providerId, CancellationToken token = default)
+        {
+            var provider = await _repositoryManager.ProviderRepository.GetByIdAsync(providerId, token);
+            var orders = await _repositoryManager.OrderRepository.GetAllByNumberAsync(number, token);
+
+            foreach(var order in orders)
+            {
+                if(order?.Provider==provider)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

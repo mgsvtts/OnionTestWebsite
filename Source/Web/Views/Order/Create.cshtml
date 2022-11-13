@@ -5,8 +5,46 @@
 }
 <div class="text-center">
     <h1>Создание заказа</h1>
-    <input asp-for="Number" placeholder="Введите номер"/>
-    <span asp-validation-for="Number"></span>
-    <input asp-for="ProviderId" placeholder="Введите номер" />
-    <span asp-validation-for="Number"></span>
+        <form method="post" asp-action="Create">
+            <span asp-validation-for="Number"></span>
+            <input asp-for="Number" placeholder="Введите номер" class="form-control"/>
+            <select asp-for="ProviderId" asp-items="@Model.Providers" class="form-control"></select>
+        <button type="button" onclick="addNewInput()">Добавить элемент заказа</button>
+        <div id="OrderItems">
+            <input asp-for="OrderItemNames[0]" class="auto" placeholder="Элемент заказа"/>
+        </div>
+            <button class="btn btn-primary">Создать</button>
+    </form>
 </div>
+@section Scripts{
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+    var iteration = 1;
+    var elem = document.getElementById("OrderItems");
+    function addNewInput() {
+        var inputElem = document.createElement("input");
+        inputElem.placeholder = "Элемент заказа";
+        inputElem.type = "text";
+        inputElem.id = `OrderItemNames_${iteration}_`;
+        inputElem.name = `OrderItemNames[${iteration}]`;
+        inputElem.onclick = "addNewInput()";
+        inputElem.classList.add("auto");
+        inputElem.classList.add("ui-autocomplete-input");
+        inputElem.setAttribute("autocomplete", "off");
+        elem.append(inputElem);
+        iteration++;
+    }
+    $(function () {
+        $(`.auto`).on("focus", function(){
+            $(this).autocomplete({
+                source: '/Home/SearchItem'
+            })
+        });
+    });
+</script>
+<script>
+    
+</script>
+}

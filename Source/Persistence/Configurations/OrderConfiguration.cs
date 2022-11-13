@@ -15,6 +15,8 @@ namespace Persistence.Configurations
             builder.Property(order => order.Id).ValueGeneratedOnAdd();
 
             builder.Property(order => order.Date).IsRequired();
+
+            builder.HasIndex(order => order.Number);
         }
     }
 }

@@ -16,3 +16,27 @@ html {
 body {
     margin-bottom: 60px;
 }
+
+.field-validation-error {
+    color: red;
+    font-size: 120%;
+    font: bold;
+}
+
+.field-validation-valid {
+    display: none;
+}
+
+.input-validation-error {
+    border: 1px solid red;
+    background-color: #fee;
+}
+
+.validation-summary-errors {
+    font-weight: bold;
+    color: red;
+}
+
+.validation-summary-valid {
+    display: none;
+}
