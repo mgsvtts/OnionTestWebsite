@@ -1,15 +1,44 @@
-﻿@using System.Globalization;
-@using Contracts.Order;
-@model OrderDto
+﻿@using System.Globalization
+@model Contracts.Order.OrderDto
 @{
     ViewData["Title"] = "Order Page";
 }
 <div class="text-center">
     <div>
-        <h1>Order Information</h1>
+        <h1>Информация о заказе</h1>
+        <a class="btn btn-primary" asp-action="Update" asp-route-id="@Model.Id">Редактировать заказ</a>
+        <form method="post" asp-controller="Order" asp-action="Delete">
+            <button class="btn btn-danger" name="id" value="@Model.Id">Удалить заказ</button>
+        </form>
     </div>
-    <p><b>ID: </b>@Model.Id</p>
-    <p><b>Number: </b>@Model.Number</p>
-    <p><b>Provider name: </b>@Model.Provider.Name</p>
-    <p><b>Created date: </b>@Model.Date.ToString("D", CultureInfo.GetCultureInfo("ru-RU"))</p>
+    <p>
+        <b>Order ID: </b>@Model.Id
+    </p>
+    <p>
+        <b>Number: </b>@Model.Number
+    </p>
+    <p>
+        <b>Provider name: </b>@Model.Provider.Name
+    </p>
+    <p>
+        <b>Created date: </b>@Model.Date.ToString("D", CultureInfo.GetCultureInfo("ru-RU"))
+    </p>
+    @if (Model.OrderItems.Any())
+    {
+        <table class="table">
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+            </tr>
+            @foreach (var item in Model.OrderItems)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Unit</td>
+                </tr>
+            }
+        </table>
+    }
 </div>

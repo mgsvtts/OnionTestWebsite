@@ -2,19 +2,26 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Persistence.Configurations
+namespace Persistence.Configurations;
+
+internal sealed class ProviderConfiguration : IEntityTypeConfiguration<Provider>
 {
-    internal sealed class ProviderConfiguration : IEntityTypeConfiguration<Provider>
+    public void Configure(EntityTypeBuilder<Provider> builder)
     {
-        public void Configure(EntityTypeBuilder<Provider> builder)
-        {
-            builder.ToTable(nameof(Provider));
+        builder.ToTable(nameof(Provider));
 
-            builder.HasKey(provider => provider.Id);
+        builder.HasData
+        (
+            new Provider { Id = 1, Name = "Provider 1" },
+            new Provider { Id = 2, Name = "Provider 2" },
+            new Provider { Id = 3, Name = "Provider 3" }
+        );
 
-            builder.Property(provider => provider.Id).ValueGeneratedOnAdd();
+        builder.HasKey(provider => provider.Id);
 
-            builder.HasIndex(provider => provider.Name);
-        }
+        builder.Property(provider => provider.Id)
+            .ValueGeneratedOnAdd();
+
+        builder.HasIndex(provider => provider.Name);
     }
 }

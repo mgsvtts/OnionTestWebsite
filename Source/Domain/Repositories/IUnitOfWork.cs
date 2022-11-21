@@ -1,7 +1,6 @@
-﻿namespace Domain.Repositories
+﻿namespace Domain.Repositories;
+
+public interface IUnitOfWork
 {
-    public interface IUnitOfWork
-    {
-        public Task SaveChangesAsync(CancellationToken token = default);
-    }
+    public Task SaveChangesAsync(CancellationToken token = default);
 }

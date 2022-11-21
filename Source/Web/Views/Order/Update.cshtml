@@ -1,1 +1,21 @@
-﻿v>
+﻿@model Contracts.Order.OrderForCreationDto
+@{
+    ViewData["Title"] = "Update Order Page";
+    var pageUrl = $"~{Context.Request.Path}{Context.Request.QueryString}";
+}
+<div class="text-center">
+    <h1>Обновление заказа</h1>
+    <form method="post" asp-action="Update">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input asp-for="Number" class="form-control" value="@Model.Number"/>
+        <input asp-for="Date" type="datetime" class="form-control" value="@Model.Date.ToShortDateString()"/>
+        <select class="form-control" asp-for="ProviderId" asp-items="@Model.Providers"></select>
+        <button class="btn btn-primary">Обновить</button>
+    </form>
+    <a asp-controller="OrderItem" asp-action="Create" asp-route-orderId="@Model.Id" class="btn btn-primary">Добавить элемент</a>
+    
+    
+    @{ 
+        await Html.RenderPartialAsync("_OrderItemsTablePartial"); 
+    }
+</div>

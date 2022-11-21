@@ -1,9 +1,8 @@
 ﻿using Contracts;
 
-namespace Services.Abstractions
+namespace Services.Abstractions;
+
+public interface IProviderService
 {
-    public interface IProviderService
-    {
-        public Task<IEnumerable<ProviderDto>> GetAllAsync(CancellationToken token = default);
-    }
+    public Task<IEnumerable<ProviderDto>> GetAllAsync(CancellationToken token = default);
 }

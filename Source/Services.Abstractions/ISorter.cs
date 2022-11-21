@@ -1,7 +1,6 @@
-﻿namespace Services.Abstractions
+﻿namespace Services.Abstractions;
+
+public interface ISorter<T>
 {
-    public interface ISorter<T>
-    {
-        public IQueryable<T> Execute(IQueryable<T> toSort);
-    }
+    public IQueryable<T> Execute(IQueryable<T> toSort);
 }

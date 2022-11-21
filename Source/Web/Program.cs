@@ -2,22 +2,27 @@ using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Persistence.Repositories;
+using Presentation;
 using Services;
 using Services.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMvc()
-                .AddApplicationPart(typeof(Presentation.AssemblyReference).Assembly);
+    .AddApplicationPart(typeof(AssemblyReference).Assembly);
 
-string connectionString = "";
+var connectionString = "";
 if (builder.Environment.EnvironmentName == "Docker")
+{
     connectionString = "DockerDatabase";
+}
 else
+{
     connectionString = "OrdinaryDatabase";
+}
 
 builder.Services.AddDbContext<ApplicationContext>(options =>
-              options.UseSqlServer(builder.Configuration.GetConnectionString(connectionString)));
+    options.UseSqlServer(builder.Configuration.GetConnectionString(connectionString)));
 
 builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 
@@ -39,7 +44,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    "default",
+    "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

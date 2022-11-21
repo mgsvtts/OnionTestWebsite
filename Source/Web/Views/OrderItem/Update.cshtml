@@ -1,0 +1,17 @@
+﻿@using Contracts.OrderItem;
+@model OrderItemForCreationDto
+@{
+    ViewData["Title"] = "Update Order Item Page";
+}
+
+<div class="text-center">
+    <h1>Обновление элемента заказа</h1>
+    <form method="post" asp-action="Update">
+        <input type="hidden" asp-for="OrderId" value="@Model.OrderId" />
+        <div asp-validation-summary="ModelOnly"></div>
+        <input asp-for="Name" class="form-control" value="@Model.Name" />
+        <input asp-for="Quantity" class="form-control" value="@Model.Quantity"/>
+        <input asp-for="Unit" class="form-control" value="@Model.Unit" />
+        <button class="btn btn-primary">Обновить</button>
+    </form>
+</div>

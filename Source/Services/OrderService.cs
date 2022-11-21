@@ -1,173 +1,236 @@
 ﻿using Contracts.Order;
+using Contracts.OrderItem;
 using Contracts.Sieve.Order;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Repositories;
 using Mapster;
 using Services.Abstractions;
+using System.Text.RegularExpressions;
 
-namespace Services
+namespace Services;
+
+public class OrderService : IOrderService
 {
-    public class OrderService : IOrderService
+    private const string TestOrderPrefix = "TEST_Number";
+    private const string TestOrderItemPrefix = "Test_OrderItem";
+    private const string TestProviderPrefix = "TEST_Provider";
+    private readonly IRepositoryManager _repositoryManager;
+
+    public OrderService(IRepositoryManager repositoryManager)
     {
-        private readonly IRepositoryManager _repositoryManager;
-        private static readonly string TestOrderPrefix = "TEST_Number";
-        private static readonly string TestProviderPrefix = "TEST_Provider";
+        _repositoryManager = repositoryManager;
+    }
 
-        public OrderService(IRepositoryManager repositoryManager)
+    public async Task<OrderDto> GetByIdAsync(int orderId, CancellationToken token = default)
+    {
+        var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderId, token);
+
+        if (order == null)
         {
-            _repositoryManager = repositoryManager;
+            throw new OrderNotFoundException(orderId);
         }
 
-        public async Task<OrderDto> GetByIdAsync(int orderId, CancellationToken token)
-        {
-            var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderId, token);
+        return order.Adapt<OrderDto>();
+    }
 
-            if (order == null)
+    public async Task CreateAsync(OrderForCreationDto orderForCreationDto, CancellationToken token = default)
+    {
+        await ValidateOrderDtoAsync(orderForCreationDto, token);
+
+        var order = orderForCreationDto.Adapt<Order>();
+
+        _repositoryManager.OrderRepository.Add(order);
+
+        await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
+    }
+
+    public async Task DeleteAsync(int orderId, CancellationToken token = default)
+    {
+        var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderId, token);
+        if (order == null)
+        {
+            throw new OrderNotFoundException(orderId);
+        }
+
+        _repositoryManager.OrderRepository.Remove(order);
+
+        await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
+    }
+
+    public async Task UpdateAsync(OrderForCreationDto orderDto, CancellationToken token = default)
+    {
+        await ValidateOrderDtoAsync(orderDto, token);
+
+        var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderDto.Id, token);
+
+        order.Number = orderDto.Number;
+        order.Provider = await _repositoryManager.ProviderRepository.GetByIdAsync(orderDto.ProviderId, token);
+        order.Date = orderDto.Date;
+
+        await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
+    }
+
+    public async Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken token = default)
+    {
+        var orders = await _repositoryManager.OrderRepository.GetAllAsync(token);
+
+        return orders.Adapt<IEnumerable<OrderDto>>();
+    }
+
+    public async Task<IQueryable<OrderDto>> SieveAsync(OrderFilterOptionsDto filterOptions, OrderSortStateDto sortOrder,
+        CancellationToken token = default)
+    {
+        var orders = await _repositoryManager.OrderRepository.GetAllAsync(token);
+        var ordersDto = orders.Adapt<IEnumerable<OrderDto>>().AsQueryable();
+
+        var filter = new OrderFilter(filterOptions);
+        var sorter = new OrderSorter(sortOrder);
+
+        ordersDto = filter.Execute(ordersDto);
+        ordersDto = sorter.Execute(ordersDto);
+
+        return ordersDto;
+    }
+
+    public async Task SeedAsync(CancellationToken token = default)
+    {
+        await _repositoryManager.OrderRepository.AddRangeAsync(await CreateSeedDataAsync(token), token);
+
+        await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
+    }
+
+    public async Task DeleteSeededAsync(CancellationToken token = default)
+    {
+        var orders = await _repositoryManager.OrderRepository.GetAllContainsNumberAsync(TestOrderPrefix, token);
+        var providers = await _repositoryManager.ProviderRepository.GetAllByNameAsync(TestProviderPrefix, token);
+
+        _repositoryManager.OrderRepository.RemoveRange(orders);
+        _repositoryManager.ProviderRepository.RemoveRange(providers);
+
+        await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
+    }
+
+    private async Task<IEnumerable<Order>> CreateSeedDataAsync(CancellationToken token = default)
+    {
+        const int ordersToAdd = 500;
+
+        var random = new Random(0);
+
+        var orders = new List<Order>();
+        var providers = new List<Provider>();
+        for (var i = 0; i < ordersToAdd; i++)
+        {
+            var randomProviderId = random.Next(10);
+            var randomItemsCount = random.Next(5);
+
+            var provider = providers.FirstOrDefault(x => x.Name.Contains($"{TestProviderPrefix} {randomProviderId}"))
+                           ?? await _repositoryManager.ProviderRepository.GetByNameAsync(
+                               $"{TestProviderPrefix} {randomProviderId}", token);
+
+            if (provider == null)
             {
-                throw new OrderNotFoundException(orderId);
+                provider = new Provider { Name = $"{TestProviderPrefix} {randomProviderId}" };
+                providers.Add(provider);
             }
 
-            return order.Adapt<OrderDto>();
-        }
-
-        public async Task CreateAsync(OrderForCreationDto orderForCreationDto, CancellationToken token = default)
-        {
-            var isUnique = await NumberIsUniqueAsync(orderForCreationDto.Number, orderForCreationDto.ProviderId, token);
-
-            if (!isUnique)
+            var order = new Order
             {
-                throw new NumberAndProviderIdIsNotUniqueException(orderForCreationDto.Number);
-            }
+                Number = $"{TestOrderPrefix} {i}",
+                Provider = provider,
+                Date = DateTime.Today - TimeSpan.FromDays(i),
+                OrderItems = new List<OrderItem>()
+            };
 
-            var order = orderForCreationDto.Adapt<Order>();
-            order.Provider = await _repositoryManager.ProviderRepository.GetByIdAsync(orderForCreationDto.ProviderId, token);
-            order.Date = DateTime.Now;
-            
-            foreach(var name in orderForCreationDto.OrderItemNames)
+            for (var j = 0; j < randomItemsCount; j++)
             {
-                var item = _repositoryManager.OrderItemRepository.GetAllByNameAsync(name);
-            }
-           
-
-            _repositoryManager.OrderRepository.Add(order);
-
-            await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
-        }
-
-        public async Task DeleteAsync(int orderId, CancellationToken token = default)
-        {
-            var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderId, token);
-
-            if (order == null)
-            {
-                throw new OrderNotFoundException(orderId);
-            }
-
-            _repositoryManager.OrderRepository.Remove(order);
-
-            await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
-        }
-
-        public async Task UpdateAsync(OrderForUpdateDto orderForUpdateDto, CancellationToken token = default)
-        {
-            var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderForUpdateDto.Id, token);
-            if (order == null)
-            {
-                throw new OrderNotFoundException(orderForUpdateDto.Id);
-            }
-
-            order.Number = orderForUpdateDto.Number;
-            order.Provider = await _repositoryManager.ProviderRepository.GetByIdAsync(orderForUpdateDto.ProviderId, token);
-
-            await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
-        }
-
-        public async Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken token = default)
-        {
-            var orders = await _repositoryManager.OrderRepository.GetAllAsync(token);
-
-            return orders.Adapt<IEnumerable<OrderDto>>();
-        }
-
-        public async Task<IQueryable<OrderDto>> SieveAsync(OrderFilterOptionsDto filterOptions, OrderSortStateDto sortOrder, CancellationToken token = default)
-        {
-            var orders = await _repositoryManager.OrderRepository.GetAllAsync(token);
-            var ordersDto = orders.Adapt<IEnumerable<OrderDto>>().AsQueryable();
-
-            var filter = new OrderFilter(filterOptions);
-            var sorter = new OrderSorter(sortOrder);
-
-            ordersDto = filter.Execute(ordersDto);
-            ordersDto = sorter.Execute(ordersDto);
-
-            return ordersDto;
-        }
-
-        public async Task SeedAsync(CancellationToken token = default)
-        {
-            await _repositoryManager.OrderRepository.AddRangeAsync(await GetSeedDataAsync(), token);
-
-            await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
-        }
-
-        public async Task DeleteSeededAsync(CancellationToken token = default)
-        {
-            var orders = await _repositoryManager.OrderRepository.GetAllByNumberAsync(TestOrderPrefix, token);
-            var providers = await _repositoryManager.ProviderRepository.GetAllByNameAsync(TestProviderPrefix, token);
-
-            _repositoryManager.OrderRepository.RemoveRange(orders);
-            _repositoryManager.ProviderRepository.RemoveRange(providers);
-
-            await _repositoryManager.UnitOfWork.SaveChangesAsync(token);
-        }
-
-        private async Task<IEnumerable<Order>> GetSeedDataAsync(CancellationToken token = default)
-        {
-            int ordersToAdd = 500;
-
-            var random = new Random(0);
-
-            var orders = new List<Order>();
-            var providers = new List<Provider>();
-
-            for (int i = 0; i < ordersToAdd; i++)
-            {
-                var randomProviderId = random.Next(10);
-
-                var provider = providers.FirstOrDefault(x => x.Name.Contains($"{TestProviderPrefix} {randomProviderId}"))
-                               ?? await _repositoryManager.ProviderRepository.GetByNameAsync($"{TestProviderPrefix} {randomProviderId}", token);
-
-                if (provider == null)
+                order.OrderItems.Add(new OrderItem
                 {
-                    provider = new Provider { Name = $"{TestProviderPrefix} {randomProviderId}" };
-                    providers.Add(provider);
-                }
-
-                orders.Add(new Order
-                {
-                    Number = $"{TestOrderPrefix} {i}",
-                    Provider = provider,
-                    Date = DateTime.Today - TimeSpan.FromDays(i)
+                    Name = $"{TestOrderItemPrefix} {random.Next()}",
+                    Quantity = random.Next(500),
+                    Unit = $"TestUnit {j}"
                 });
             }
 
-            return orders;
+            orders.Add(order);
         }
 
-        private async Task<bool> NumberIsUniqueAsync(string number, int providerId, CancellationToken token = default)
-        {
-            var provider = await _repositoryManager.ProviderRepository.GetByIdAsync(providerId, token);
-            var orders = await _repositoryManager.OrderRepository.GetAllByNumberAsync(number, token);
+        return orders;
+    }
 
-            foreach(var order in orders)
+    private async Task ValidateOrderDtoAsync(OrderForCreationDto orderDto, CancellationToken token = default)
+    {
+        var isUnique = await NumberIsUniqueAsync(orderDto.Number, orderDto.ProviderId, token);
+
+        if(orderDto.Id== 0)
+        {
+            if (!isUnique)
             {
-                if(order?.Provider==provider)
+                throw new NumberAndProviderIdIsNotUniqueException(orderDto.Number);
+            }
+        }
+        else
+        {
+            var orders = await _repositoryManager.OrderRepository.GetAllWithExactlySameNumberAsync(orderDto.Number, token);
+            if (!isUnique && orders.Count()>1)
+            {
+                throw new NumberAndProviderIdIsNotUniqueException(orderDto.Number);
+            }
+        }
+
+        if (orderDto.Id != 0)
+        {
+            var order = await _repositoryManager.OrderRepository.GetByIdAsync(orderDto.Id, token);
+            if (order == null)
+            {
+                throw new OrderNotFoundException(orderDto.Id);
+            }
+        }
+
+        if (orderDto.Number == null)
+        {
+            throw new ArgumentException("Enter a number");
+        }
+
+        if (orderDto.Date == DateTime.MinValue ||
+            orderDto.Date == DateTime.MaxValue ||
+            !DateTime.TryParse(orderDto.Date.ToString(), out DateTime result))
+        {
+            throw new FormatException("Date is invalid");
+        }
+
+        if (orderDto.OrderItems!=null && orderDto.OrderItems.Any())
+        {
+            foreach (var item in orderDto.OrderItems)
+            {
+                if (string.IsNullOrEmpty(item.Name) || string.IsNullOrEmpty(item.Unit) || string.IsNullOrEmpty(item.Quantity))
                 {
-                    return false;
+                    throw new ArgumentException("Order item parameters cannot be null");
+                }
+
+                if (orderDto.Number == item.Name)
+                {
+                    throw new OrderItemNumberEqualOrderNameException();
+                }
+
+                if (!string.IsNullOrEmpty(item.Quantity) && item.Quantity.Contains('.'))
+                {
+                    throw new FormatException("Use comma instead of dot in quantity");
+                }
+
+                if (!Regex.IsMatch(item.Quantity, @"^[0-9]+(\,[0-9]{1,3})?$"))
+                {
+                    throw new FormatException("Valid number with maximum 3 decimal places");
                 }
             }
-            return true;
         }
+    }
+
+    private async Task<bool> NumberIsUniqueAsync(string number, int providerId, CancellationToken token = default)
+    {
+        var provider = await _repositoryManager.ProviderRepository.GetByIdAsync(providerId, token);
+        var orders = await _repositoryManager.OrderRepository.GetAllWithExactlySameNumberAsync(number, token);
+
+        return orders.All(order => order.Provider != provider);
     }
 }

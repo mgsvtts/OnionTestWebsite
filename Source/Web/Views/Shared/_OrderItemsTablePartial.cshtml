@@ -1,0 +1,32 @@
+﻿@{
+    var pageUrl = $"~{Context.Request.Path}{Context.Request.QueryString}";
+}
+@if (Model.OrderItems == null || Model.OrderItems.Count==0)
+{
+    <h1>Пустой заказ...</h1>
+}
+else{
+    <table class="table">
+    <tr>
+        <th>Name</th>
+        <th>Quantity</th>
+        <th>Unit</th>
+        <th></th>
+        <th></th>
+    </tr>
+    @foreach (var item in Model.OrderItems)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Quantity</td>
+            <td>@item.Unit</td>
+            <td>
+                <a asp-controller="OrderItem" asp-action="Update" asp-route-id="@item.Id" class="btn btn-primary">Редактировать</a>
+                <form asp-action="Delete" asp-controller="OrderItem" asp-route-id="@item.Id" asp-route-returnUrl="@pageUrl">
+                    <button class="btn btn-danger">Удалить</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </table>
+}

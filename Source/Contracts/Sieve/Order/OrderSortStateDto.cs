@@ -1,14 +1,13 @@
-﻿namespace Contracts.Sieve.Order
+﻿namespace Contracts.Sieve.Order;
+
+public enum OrderSortStateDto
 {
-    public enum OrderSortStateDto
-    {
-        IdAsc,
-        IdDesc,
-        NumberAsc,
-        NumberDesc,
-        DateAsc,
-        DateDesc,
-        ProviderNameAsc,
-        ProviderNameDesc
-    }
+    IdAsc,
+    IdDesc,
+    NumberAsc,
+    NumberDesc,
+    DateAsc,
+    DateDesc,
+    ProviderNameAsc,
+    ProviderNameDesc
 }

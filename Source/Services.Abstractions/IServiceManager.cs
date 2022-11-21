@@ -1,11 +1,10 @@
-﻿namespace Services.Abstractions
+﻿namespace Services.Abstractions;
+
+public interface IServiceManager
 {
-    public interface IServiceManager
-    {
-        public IOrderService OrderService { get; }
+    public IOrderService OrderService { get; }
 
-        public IProviderService ProviderService { get; }
+    public IProviderService ProviderService { get; }
 
-        public IOrderItemService OrderItemService { get; }
-    }
+    public IOrderItemService OrderItemService { get; }
 }

@@ -1,13 +1,16 @@
-﻿namespace Domain.Entities
+﻿namespace Domain.Entities;
+
+public class Order
 {
-    public class Order
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        public string Number { get; set; }
+    public string Number { get; set; }
 
-        public DateTime Date { get; set; }
+    public DateTime Date { get; set; }
 
-        public Provider Provider { get; set; }
-    }
+    public int ProviderId { get; set; }
+
+    public Provider Provider { get; set; }
+
+    public List<OrderItem> OrderItems { get; set; }
 }

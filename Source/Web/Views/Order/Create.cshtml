@@ -1,50 +1,69 @@
-﻿@using Contracts.Order;
-@model OrderForCreationDto
+﻿@model Contracts.Order.OrderForCreationDto
 @{
     ViewData["Title"] = "Create Order Page";
 }
 <div class="text-center">
-    <h1>Создание заказа</h1>
-        <form method="post" asp-action="Create">
-            <span asp-validation-for="Number"></span>
-            <input asp-for="Number" placeholder="Введите номер" class="form-control"/>
-            <select asp-for="ProviderId" asp-items="@Model.Providers" class="form-control"></select>
-        <button type="button" onclick="addNewInput()">Добавить элемент заказа</button>
+    <h1>Создание заказа</h1>    
+    <form method="post" asp-action="Create">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input asp-for="Number" placeholder="Введите номер" class="form-control"/>
+        <input type="date" asp-for="Date" class="form-control" />
+        <select asp-for="ProviderId" asp-items="@Model.Providers" class="form-control"></select>
         <div id="OrderItems">
-            <input asp-for="OrderItemNames[0]" class="auto" placeholder="Элемент заказа"/>
+            @if (Model.OrderItems.Any())
+            {
+                for (int i = 0; i < Model.OrderItems.Count; ++i)
+                {
+                    int incremented = i+1;
+                    <div id="@incremented">
+                        <h2>Order Item @incremented</h2>
+                        <input placeholder="Название" type="text" asp-for="@Model.OrderItems[i].Name" />
+                        <input placeholder="Колличество" type="text" asp-for="@Model.OrderItems[i].Quantity" />
+                        <input placeholder="Единица измерения" type="text" asp-for="@Model.OrderItems[i].Unit" />
+                        <input value="Удалить этот элемент" class="btn btn-danger" onclick="DeleteOrderItemInput(@incremented)">
+                        <input value="Добавить элемент" class="btn btn-primary" onclick="CreateNewOrderItemInput(@i)" />
+                    </div>
+                }
+            }
+            else
+            {
+                <div id="1">
+                    <h2>Order Item 1</h2>
+                    <input placeholder="Название" type="text" id="OrderItems_0__Name" name="OrderItems[0].Name"/>
+                    <input placeholder="Колличество" type="text" id="OrderItems_0__Quantity" name="OrderItems[0].Quantity" />
+                    <input placeholder="Единица измерения" type="text" id="OrderItems_0__Unit" name="OrderItems[0].Unit" />
+                    <input value="Удалить этот элемент" class="btn btn-danger" onclick="DeleteOrderItemInput(1)">
+                    <input value="Добавить элемент" class="btn btn-primary" onclick="CreateNewOrderItemInput(0)" />
+                </div>
+            }
         </div>
-            <button class="btn btn-primary">Создать</button>
+        <button class="btn btn-primary">Создать</button>
     </form>
 </div>
 @section Scripts{
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
-    var iteration = 1;
-    var elem = document.getElementById("OrderItems");
-    function addNewInput() {
-        var inputElem = document.createElement("input");
-        inputElem.placeholder = "Элемент заказа";
-        inputElem.type = "text";
-        inputElem.id = `OrderItemNames_${iteration}_`;
-        inputElem.name = `OrderItemNames[${iteration}]`;
-        inputElem.onclick = "addNewInput()";
-        inputElem.classList.add("auto");
-        inputElem.classList.add("ui-autocomplete-input");
-        inputElem.setAttribute("autocomplete", "off");
-        elem.append(inputElem);
+    function CreateNewOrderItemInput(iteration) 
+    {
         iteration++;
+        let divElem = document.getElementById("OrderItems");
+        divElem.lastElementChild.lastElementChild.remove();
+        var id = iteration+1;
+        divElem.innerHTML += `
+        <div id="${id}">
+            <h2>Order Item ${iteration}</h2>
+            <input placeholder="Название" type="text" id="OrderItems_${iteration}__Name" name="OrderItems[${iteration}].Name"/>
+            <input placeholder="Колличество" type="text" id="OrderItems_${iteration}__Quantity" name="OrderItems[${iteration}].Quantity" />
+            <input placeholder="Единица измерения" type="text" id="OrderItems_${iteration}__Unit" name="OrderItems[${iteration}].Unit" />
+            <input value="Удалить этот элемент"  class="btn btn-danger" onclick="DeleteOrderItemInput(${id})"/>
+            <input value="Добавить элемент" class="btn btn-primary" onclick="CreateNewOrderItemInput(${iteration})"
+        </div>`;
     }
-    $(function () {
-        $(`.auto`).on("focus", function(){
-            $(this).autocomplete({
-                source: '/Home/SearchItem'
-            })
-        });
-    });
-</script>
-<script>
-    
+        function DeleteOrderItemInput(id){
+            let divElem = document.getElementById("OrderItems");
+            divElem.childNodes.item(id).remove();
+            if(divElem.childNodes.length===1){
+                divElem.innerHTML+=`<input value="Добавить элемент" class="btn btn-primary" onclick="CreateNewOrderItemInput(0)"`;
+            }
+        }
 </script>
 }

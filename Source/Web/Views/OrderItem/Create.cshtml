@@ -1,0 +1,19 @@
+﻿@using Contracts.OrderItem;
+@model OrderItemForCreationDto
+@{
+    ViewData["Title"] = "Create Order Item Page";
+}
+<div class="text-center">
+    <h1>Создание элемента заказа</h1>
+    <form method="post" asp-action="Create">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input type="hidden" asp-for="OrderId" value="@Model.OrderId"/>
+        <span asp-validation-for="Name"></span>
+        <input asp-for="Name" placeholder="Введите название" class="form-control"/>
+        <span asp-validation-for="Quantity"></span>
+        <input asp-for="Quantity" type="text" placeholder="Введите колличество" class="form-control" />
+        <span asp-validation-for="Unit"></span>
+        <input asp-for="Unit" placeholder="Введите единицу измерения" class="form-control" />
+        <button class="btn btn-primary">Создать</button>
+    </form>
+</div>

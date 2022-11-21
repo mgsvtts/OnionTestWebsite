@@ -2,18 +2,20 @@
 using Contracts.Sieve.Order;
 using Services.Abstractions;
 
-namespace Services
+namespace Services;
+
+public class OrderSorter : ISorter<OrderDto>
 {
-    public class OrderSorter : ISorter<OrderDto>
+    public OrderSorter(OrderSortStateDto sortOrder)
     {
-        public OrderSortStateDto SortOrder { get; }
+        SortOrder = sortOrder;
+    }
 
-        public OrderSorter(OrderSortStateDto sortOrder)
-        {
-            SortOrder = sortOrder;
-        }
+    public OrderSortStateDto SortOrder { get; }
 
-        public IQueryable<OrderDto> Execute(IQueryable<OrderDto> toSort) => toSort = SortOrder switch
+    public IQueryable<OrderDto> Execute(IQueryable<OrderDto> toSort)
+    {
+        return toSort = SortOrder switch
         {
             OrderSortStateDto.IdDesc => toSort.OrderByDescending(x => x.Id),
             OrderSortStateDto.NumberAsc => toSort.OrderBy(x => x.Number).ThenBy(x => x.Id),
@@ -21,8 +23,9 @@ namespace Services
             OrderSortStateDto.DateAsc => toSort.OrderBy(x => x.Date).ThenBy(x => x.Number),
             OrderSortStateDto.DateDesc => toSort.OrderByDescending(x => x.Date).ThenByDescending(x => x.Number),
             OrderSortStateDto.ProviderNameAsc => toSort.OrderBy(x => x.Provider.Name).ThenBy(x => x.Number),
-            OrderSortStateDto.ProviderNameDesc => toSort.OrderByDescending(x => x.Provider.Name).ThenByDescending(x => x.Number),
-            _ => toSort.OrderBy(x => x.Id),
+            OrderSortStateDto.ProviderNameDesc => toSort.OrderByDescending(x => x.Provider.Name)
+                .ThenByDescending(x => x.Number),
+            _ => toSort.OrderBy(x => x.Id)
         };
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace Contracts
-{
-    public class ProviderDto
-    {
-        public int Id { get; set; }
+﻿namespace Contracts;
 
-        public string Name { get; set; }
-    }
+public class ProviderDto
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; }
 }

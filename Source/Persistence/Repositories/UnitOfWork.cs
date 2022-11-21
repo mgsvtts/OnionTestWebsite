@@ -1,13 +1,16 @@
 ﻿using Domain.Repositories;
 
-namespace Persistence.Repositories
+namespace Persistence.Repositories;
+
+public class UnitOfWork : IUnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    private readonly ApplicationContext _context;
+
+    public UnitOfWork(ApplicationContext context)
     {
-        private readonly ApplicationContext _context;
-
-        public UnitOfWork(ApplicationContext context) => _context = context;
-
-        public async Task SaveChangesAsync(CancellationToken token = default) => await _context.SaveChangesAsync();
+        _context = context;
     }
+
+    public async Task SaveChangesAsync(CancellationToken token = default)
+        => await _context.SaveChangesAsync(token);
 }
